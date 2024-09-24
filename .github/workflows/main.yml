@@ -5,6 +5,10 @@ on:
     branches:
       - main
 
+env:
+  # Setting an environment variable with the value of a configuration variable
+  env_var: ${{ vars.BUCKET_NAME }}
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -23,4 +27,4 @@ jobs:
 
     - name: Run Tests
       run: |
-        python manage.py test
+        echo "variable from shell environment : $env_var"
