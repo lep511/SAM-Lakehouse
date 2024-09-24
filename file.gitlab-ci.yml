@@ -1,0 +1,190 @@
+# The tags and stack_name are defined in the [samconfig.toml] file.
+# CI/CD Variables:
+#   AWS_ACCESS_KEY_ID
+#   AWS_SECRET_ACCESS_KEY  - masked
+#   AWS_SESSION_TOKEN  -  if session_token exist
+#   AWS_BUCKET   -  e.g. aws-sam-cli-managed-default-samclisourcebucket-808505
+#   AWS_REGION   -  e.g. us-east-1
+
+variables:
+  SAM_TEMPLATE: template.yml
+  STACK_NAME: datalake-iceberg
+  DOCKERNAME: datalake-iceberg
+  RAW_BUCKET: raw-datalake-iceberg-2f88fdbce7c85
+  STAGE_BUCKET: stage-datalake-iceberg-2f88fdbce7c85
+  FOLDER_RAW_BUCKET: icebergdatalake/
+  ENVIRONMENT: dev
+  CAPABILITY: CAPABILITY_IAM CAPABILITY_NAMED_IAM
+  SAST_DISABLED: "yes" # "yes" to disabled SAST test
+
+image: public.ecr.aws/sam/build-python3.12:latest
+
+#after_script:
+#  - echo "After script section"
+#  - echo "For example you might do some cleanup here"
+
+    
+stages:
+  - build
+  - validate
+  - test
+  - deploy
+  - delete
+
+build-buckets:
+  stage: build
+  script:
+    - echo "Creating sam-bucket..."
+    - if aws s3api head-bucket --bucket $AWS_BUCKET 2>/dev/null; then echo "Bucket $AWS_BUCKET exist."; else aws s3 mb s3://${AWS_BUCKET} --region ${AWS_REGION} ; fi
+    - echo "Creating raw bucket if not exist..."
+    - if aws s3api head-bucket --bucket $RAW_BUCKET 2>/dev/null; then echo "Bucket $RAW_BUCKET exist."; else aws s3 mb s3://$RAW_BUCKET --region ${AWS_REGION} ; fi
+    - echo "Creating stage bucket if not exist..."
+    - if aws s3api head-bucket --bucket $STAGE_BUCKET 2>/dev/null; then echo "Bucket $STAGE_BUCKET exist."; else aws s3 mb s3://$STAGE_BUCKET --region ${AWS_REGION} ; fi
+    - echo "Enable EventBridge notification..."
+    - >
+      aws s3api put-bucket-notification-configuration --bucket $RAW_BUCKET --notification-configuration '{"EventBridgeConfiguration": {}}'
+    - echo "Enabling versioning on buckets..."
+    - aws s3api put-bucket-versioning --bucket $RAW_BUCKET --versioning-configuration Status=Enabled
+    - aws s3api put-bucket-versioning --bucket $STAGE_BUCKET --versioning-configuration Status=Enabled
+    - aws s3api put-object --bucket $RAW_BUCKET --key $FOLDER_RAW_BUCKET --content-length 0
+
+build-docker:
+  stage: build
+  image: docker:24.0.5
+  services:
+    - docker:24.0.5-dind
+  before_script:
+    - docker info
+
+  variables:
+    # When you use the dind service, you must instruct Docker to talk with
+    # the daemon started inside of the service. The daemon is available
+    # with a network connection instead of the default
+    # /var/run/docker.sock socket. Docker 19.03 does this automatically
+    # by setting the DOCKER_HOST in
+    # https://github.com/docker-library/docker/blob/d45051476babc297257df490d22cbd806f1b11e4/19.03/docker-entrypoint.sh#L23-L29
+    #
+    # The 'docker' hostname is the alias of the service container as described at
+    # https://docs.gitlab.com/ee/ci/services/#accessing-the-services.
+    #
+    # Specify to Docker where to create the certificates. Docker
+    # creates them automatically on boot, and creates
+    # `/certs/client` to share between the service and job
+    # container, thanks to volume mount from config.toml
+    #
+    DOCKER_HOST: tcp://docker:2375
+    #
+    # This instructs Docker not to start over TLS.
+    DOCKER_TLS_CERTDIR: ""
+
+  script:
+    - echo "Installing AWS Cli..."
+    - apk add --no-cache aws-cli
+    - aws --version
+    - aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID
+    - aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
+    - if [ -n "$AWS_SESSION_TOKEN" ]; then aws configure set aws_session_token $AWS_SESSION_TOKEN; fi
+    - aws configure set region ${AWS_REGION}
+    - aws configure set output json
+    - echo "Create or replace if repo does not exist...."
+    - aws_account=$(aws sts get-caller-identity --query Account --output text)
+    - reponame="$aws_account.dkr.ecr.${AWS_REGION}.amazonaws.com/$DOCKERNAME:latest"
+    - aws ecr describe-repositories --repository-names $DOCKERNAME || aws ecr create-repository --repository-name $DOCKERNAME
+    - echo "Login to ECR..."
+    - aws ecr get-login-password --region "${AWS_REGION}" | docker login --username AWS --password-stdin $aws_account.dkr.ecr.${AWS_REGION}.amazonaws.com
+    - echo "Building the docker image"
+    - docker build -t lambda-pyiceberg .
+    - echo "Tagging the Docker image"
+    - docker tag lambda-pyiceberg $reponame
+    - echo "Pushing the Docket image to AWS ECR"
+    - docker push $reponame
+  rules:
+    - changes:
+        - Dockerfile
+        - src/**/*
+      when: always
+    - when: manual
+
+codeguru-security:
+  stage: validate
+  image:
+    name: public.ecr.aws/l6c8c5q3/codegurusecurity-actions-public:latest
+    entrypoint: [""]
+  script:
+    - REPO_NAME="`basename -s .git $(echo $CI_REPOSITORY_URL | grep -oE "[^/]+$")`"
+    - python /usr/app/codeguru/command.py --source_path "." --aws_region "${AWS_REGION}" --scan_name CGS-GitLab-$REPO_NAME --fail_on_severity Critical --output_file_format "sast"
+    - cat codeguru-security-results.sast.json
+  when: manual
+
+python-sam-validate:
+  stage: validate
+  script:
+    - export SAM_CLI_TELEMETRY=0
+    - export AWS_DEFAULT_REGION=${AWS_REGION}
+    - sam validate -t $SAM_TEMPLATE --lint
+    - pip install --upgrade pip
+    - pip install ruff    # An extremely fast Python linter and code formatter, written in Rust. https://docs.astral.sh/ruff/
+    - ruff check --config 'target-version = "py312"'
+  except:
+    changes:
+      - notebook/**/*
+  allow_failure: true
+
+checkov:
+  stage: test
+  allow_failure: true  # True for AutoDevOps compatibility
+  image:
+    name: bridgecrew/checkov:latest
+    entrypoint:
+      - '/usr/bin/env'
+      - 'PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
+  rules:
+    - if: $SAST_DISABLED == "yes"
+      when: never
+    - if: $CI_COMMIT_BRANCH
+      exists:
+        - '**/*.yml'
+        - '**/*.yaml'
+        - '**/*.json'
+        - '**/*.template'
+        - '**/*.tf'      
+        - '**/serverless.yml'
+        - '**/serverless.yaml'
+  script:
+    - checkov -d . -o junitxml | tee checkov.test.xml
+  artifacts:
+    reports:
+      junit: "checkov.test.xml"
+    paths:
+      - "checkov.test.xml"
+
+deploy-sam:
+  stage: deploy
+  script:
+    - export SAM_CLI_TELEMETRY=0
+    - export AWS_DEFAULT_REGION=$AWS_REGION
+
+    - sam build --template $SAM_TEMPLATE --beta-features
+    
+    - sam deploy --stack-name $STACK_NAME
+                 --template $SAM_TEMPLATE
+                 --capabilities $CAPABILITY
+                 --region ${AWS_REGION}
+                 --s3-bucket ${AWS_BUCKET}
+                 --no-fail-on-empty-changeset
+                 --config-env $ENVIRONMENT
+                 --parameter-overrides S3BucketRaw=$RAW_BUCKET S3BucketStage=$STAGE_BUCKET
+                 --resolve-image-repos
+  environment: $ENVIRONMENT
+
+sam-delete:
+  stage: delete
+  script:
+    - export SAM_CLI_TELEMETRY=0
+    - export AWS_DEFAULT_REGION=$AWS_REGION
+    - sam delete --stack-name $STACK_NAME 
+                 --region ${AWS_REGION} 
+                 --s3-bucket ${AWS_BUCKET}
+                 --no-prompts
+                 --config-env $ENVIRONMENT
+  when: manual
