@@ -1,0 +1,29 @@
+{
+    "table_name":"houses_data",
+    "database":"melbourne",
+    "description":"Melbourne house data prices.",
+    "partition_cols":[
+        
+    ],
+    "doc_string":{
+        "suburb":"The suburb where the property is located.",
+        "address":"The specific address of the property.",
+        "rooms":"The number of rooms in the property.",
+        "type":"The type of property (e.g., house, unit).",
+        "price":"The selling price of the property.",
+        "method":"The method of sale (e.g., auction, private sale).",
+        "sellerg":"The name of the seller’s agent or agency.",
+        "date":"The date the property was sold.",
+        "postcode":"The postal code of the property’s location.",
+        "regionname":"The broader region where the property is situated.",
+        "propertycount":"The number of properties in the suburb.",
+        "distance":"The distance from the property to the central business district (CBD).",
+        "councilarea":"The local government area responsible for the property."
+    },
+    "required_col":{
+        
+    },
+    "metadata_s3":{
+        "datalake":"iceberg-datalake"
+    }
+}

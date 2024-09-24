@@ -1,0 +1,25 @@
+{
+    "Records":[
+       {
+          "messageId":"42f59b70-ad6e-4b85-9f6c-b1a391380923",
+          "receiptHandle":"AQEBdlzB6GbO5xUfcQNs7Gn154n9DB7QNYCn1JYuGH4/0BwCKG9GCijapuFdS0Q01SagqDKhx3OpoO8nYUSosN8XDTTMUAYfKOIXHi5nNFq/Bos3zFbxbm8aNVh2AdppxCSPE5xG6gloE5PyOT+9LZuYrM/gQ6YU9c1t2ijaMdJg1ziwMFRUO4yCwfgH9YU8frrVX5EJAeHELqTUzzJCM5mHwYX1YSCOhrxNJ/h7ag2UvXl+MYDy+UsXxK3hV54dalTlXU4u4cKcx25N0skqTxBfs+KouCvUx7hpMhO2ckou4WM=",
+          "body":"{\"version\":\"0\",\"id\":\"48b21f9e-27fc-f7e4-f24b-20f4bd8ef0ac\",\"detail-type\":\"Object Created\",\"source\":\"aws.s3\",\"account\":\"010928219150\",\"time\":\"2024-09-05T20:46:10Z\",\"region\":\"us-east-1\",\"resources\":[\"arn:aws:s3:::raw-datalake-iceberg-2f88fdbce7e3\"],\"detail\":{\"version\":\"0\",\"bucket\":{\"name\":\"raw-datalake-iceberg-2f88fdbce7e3\"},\"object\":{\"key\":\"icebergdatalake/sales/shop/files/House price.parquet\",\"size\":9251,\"etag\":\"1bbebf3d8830aebb7e23df098cdfaa30\",\"sequencer\":\"0066DA1892240E109C\"},\"request-id\":\"NB2SZ8NA4AMQPP46\",\"requester\":\"010928219150\",\"source-ip-address\":\"167.60.154.252\",\"reason\":\"PutObject\"}}",
+          "attributes":{
+             "ApproximateReceiveCount":"1",
+             "SentTimestamp":"1725569171384",
+             "SequenceNumber":"18888489781583855872",
+             "MessageGroupId":"Idsamdatalake",
+             "SenderId":"AIDAJXNJGGKNS7OSV23OI",
+             "MessageDeduplicationId":"17ec31cd547fab44fdccad910e3c21a083924abd57d10591b20e38e2c73fa1d2",
+             "ApproximateFirstReceiveTimestamp":"1725569171384"
+          },
+          "messageAttributes":{
+             
+          },
+          "md5OfBody":"7b6f7e43617e4686d769ce22ec684d5d",
+          "eventSource":"aws:sqs",
+          "eventSourceARN":"arn:aws:sqs:us-east-1:010928219150:datalake-iceberg-dev-queue.fifo",
+          "awsRegion":"us-east-1"
+       }
+    ]
+ }

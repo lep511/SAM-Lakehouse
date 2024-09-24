@@ -1,0 +1,10 @@
+{
+    "table_name":"test_table",
+    "description": "Test only table",
+    "partition_cols":[],
+    "doc_string":{},
+    "required_col":{},
+    "metadata_s3":{
+        "datalake":"iceberg-test"
+    }
+}

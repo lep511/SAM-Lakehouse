@@ -1,0 +1,185 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  Sample SAM Template for sam-app
+
+Metadata:
+  'AWS::ServerlessRepo::Application':
+    Name: IcebergDataLake
+    Description: 'Automate replication of relational sources into a transactional data lake with Apache Iceberg and AWS Glue.'
+    Author: 'Esteban Perez'
+    SpdxLicenseId: MIT-0
+    LicenseUrl: ./LICENSE.txt
+    ReadmeUrl: ./README.md
+    Labels:
+      - iceberg
+      - lambda
+      - datalake
+      - serverless
+    HomePageUrl: 'https://gitlab.com/cleanup-coude/sam-lakehouse'
+    SemanticVersion: 0.1.0
+    SourceCodeUrl: 'https://gitlab.com/cleanup-coude/sam-lakehouse'
+
+Parameters:
+  EnvType:
+    Description: The environment to deploy to
+    Default: dev
+    Type: String
+    AllowedValues:
+      - prod
+      - stage
+      - dev
+    ConstraintDescription: must specify prod, stage or dev.
+  
+  S3BucketRaw:
+    Type: String
+    Description: Existing Amazon S3 bucket for the raw layer of the data lake.
+  
+  S3BucketStage:
+    Type: String
+    Description: Existing Amazon S3 bucket for the curated layer of the data lake.
+
+
+Resources:
+  DynamoTableEvent:
+    Type: AWS::Serverless::SimpleTable
+    Properties:
+      TableName: !Sub ${AWS::StackName}-${EnvType}-recordtable
+      PrimaryKey:
+        Name: id
+        Type: String
+
+  SQSFifoQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub ${AWS::StackName}-${EnvType}-queue.fifo
+      FifoQueue: true
+      ContentBasedDeduplication: true
+      DeduplicationScope: messageGroup
+      FifoThroughputLimit: perMessageGroupId
+      VisibilityTimeout: 1200
+      ReceiveMessageWaitTimeSeconds: 15
+      RedriveAllowPolicy: '{"redrivePermission":"denyAll"}'
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt SQSDeadLetterQueue.Arn
+        maxReceiveCount: 5
+  
+  SQSFifoQueuePolicy:
+    Type: AWS::SQS::QueuePolicy
+    Properties:
+      Queues:
+        - !Ref SQSFifoQueue
+      PolicyDocument:
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Service: events.amazonaws.com
+            Action:
+              - "sqs:SendMessage"
+            Resource: !GetAtt SQSFifoQueue.Arn
+            Condition:
+              ArnEquals:
+                "aws:SourceArn": !GetAtt PutObjectS3EventsRule.Arn
+
+  SQSDeadLetterQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub ${AWS::StackName}-${EnvType}-queue-dlq.fifo
+      FifoQueue: true
+  
+  PutObjectS3EventsRule:
+    Type: 'AWS::Events::Rule'
+    Properties:
+      Description: Event notification for S3 PutObject events in raw bucket
+      Name: !Sub ${AWS::StackName}-${EnvType}-rule-DO-NOT-DELETE
+      EventPattern:
+        source:
+          - aws.s3
+        detail-type:
+          - Object Created
+        detail:
+          bucket:
+              name:
+                - !Ref S3BucketRaw
+          object:
+              key:
+                - wildcard: "icebergdatalake/*.parquet"
+                - wildcard: "icebergdatalake/*.csv"
+                - wildcard: "icebergdatalake/*.csv.gz"
+      State: ENABLED
+      Targets:
+        - Arn: !GetAtt SQSFifoQueue.Arn
+          Id: Idsamdatalake
+          SqsParameters:
+            MessageGroupId: Idsamdatalake
+
+  IcebergIngestFunction:
+      Type: AWS::Serverless::Function 
+      Properties:
+          CodeUri: src/
+          PackageType: Image
+          ImageUri: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/datalake-iceberg:latest
+          Architectures:
+              - x86_64
+          Timeout: 200
+          MemorySize: 3008
+          EphemeralStorage:
+            Size: 2048
+          Policies:
+            - Statement:
+              - Sid: GlueFullAccess
+                Effect: Allow
+                Action:
+                - glue:*
+                Resource: "*"
+            - S3ReadPolicy:
+                BucketName: !Ref S3BucketRaw
+            - S3FullAccessPolicy:
+                BucketName: !Ref S3BucketStage
+            - DynamoDBCrudPolicy:
+                TableName: !Ref DynamoTableEvent
+          Events:
+            SQSEvent:
+              Type: SQS
+              Properties:
+                Queue: !GetAtt SQSFifoQueue.Arn
+                BatchSize: 5
+                Enabled: true
+                ScalingConfig:
+                  MaximumConcurrency: 4
+          Environment:
+            Variables:
+              STAGE_BUCKET: !Ref S3BucketStage
+              ENV_TYPE: !Ref EnvType
+              DYNAMO_TABLE_NAME: !Ref DynamoTableEvent
+              
+  # @TODO Canary Deployments
+  # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/automating-updates-to-serverless-apps.html
+  
+
+Outputs:
+
+  RawBucket:
+    Description: "S3 Bucket for raw data"
+    Value: !Ref S3BucketRaw
+
+  StageBucket:
+    Description: "S3 Bucket for stage data"
+    Value: !Ref S3BucketStage
+
+  QueueURL:
+    Description: "URL of SQS Queue"
+    Value: !Ref SQSFifoQueue
+
+  QueueARN:
+    Description: "ARN of SQS Queue"
+    Value: !GetAtt SQSFifoQueue.Arn
+
+  QueueDLQARN:
+    Description: "ARN of SQS Queue Dead Letter"
+    Value: !GetAtt SQSDeadLetterQueue.Arn
+  
+  DynamoTableName:
+    Description: "DynamoDB Table for event data"
+    Value: !Ref DynamoTableEvent
+

@@ -1,0 +1,20 @@
+version = 0.1
+[dev.deploy.parameters]
+capabilities = "CAPABILITY_IAM CAPABILITY_NAMED_IAM"
+tags = [
+    "project=\"ibeberg-datalake\"",
+    "stage=\"dev\""
+]
+parameter_overrides = [
+    "EnvType=\"dev\""
+]
+
+[prod.deploy.parameters]
+capabilities = "CAPABILITY_IAM CAPABILITY_NAMED_IAM"
+tags = [
+    "project=\"ibeberg-datalake\"",
+    "stage=\"prod\""
+]
+parameter_overrides = [
+    "EnvType=\"prod\""
+]

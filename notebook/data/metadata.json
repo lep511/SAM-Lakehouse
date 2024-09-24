@@ -1,0 +1,113 @@
+{
+    "tableName": "melbourne.houses_data",
+    "database": "melbourne",
+    "properties": {
+        "Description": "Melbourne house data prices."
+    },
+    "schemas": [
+        {
+            "type": "struct",
+            "fields": [
+                {
+                    "id": 1,
+                    "name": "suburb",
+                    "type": "string",
+                    "required": false,
+                    "doc": "The suburb where the property is located."
+                },
+                {
+                    "id": 2,
+                    "name": "address",
+                    "type": "string",
+                    "required": false,
+                    "doc": "The specific address of the property."
+                },
+                {
+                    "id": 3,
+                    "name": "rooms",
+                    "type": "long",
+                    "required": false,
+                    "doc": "The number of rooms in the property."
+                },
+                {
+                    "id": 4,
+                    "name": "type",
+                    "type": "string",
+                    "required": false,
+                    "doc": "The type of property (e.g., house, unit)."
+                },
+                {
+                    "id": 5,
+                    "name": "price",
+                    "type": "double",
+                    "required": false,
+                    "doc": "The selling price of the property."
+                },
+                {
+                    "id": 6,
+                    "name": "method",
+                    "type": "string",
+                    "required": false,
+                    "doc": "The method of sale (e.g., auction, private sale)."
+                },
+                {
+                    "id": 7,
+                    "name": "sellerg",
+                    "type": "string",
+                    "required": false,
+                    "doc": "The name of the seller\u2019s agent or agency."
+                },
+                {
+                    "id": 8,
+                    "name": "date",
+                    "type": "string",
+                    "required": false,
+                    "doc": "The date the property was sold."
+                },
+                {
+                    "id": 9,
+                    "name": "postcode",
+                    "type": "long",
+                    "required": false,
+                    "doc": "The postal code of the property\u2019s location."
+                },
+                {
+                    "id": 10,
+                    "name": "regionname",
+                    "type": "string",
+                    "required": false,
+                    "doc": "The broader region where the property is situated."
+                },
+                {
+                    "id": 11,
+                    "name": "propertycount",
+                    "type": "long",
+                    "required": false,
+                    "doc": "The number of properties in the suburb."
+                },
+                {
+                    "id": 12,
+                    "name": "distance",
+                    "type": "double",
+                    "required": false,
+                    "doc": "The distance from the property to the central business district (CBD)."
+                },
+                {
+                    "id": 13,
+                    "name": "councilarea",
+                    "type": "string",
+                    "required": false,
+                    "doc": "The local government area responsible for the property."
+                }
+            ],
+            "schema-id": 0,
+            "identifier-field-ids": []
+        }
+    ],
+    "partition-specs": [
+        {
+            "spec-id": 0,
+            "fields": []
+        }
+    ]
+}

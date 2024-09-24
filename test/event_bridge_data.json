@@ -1,0 +1,19 @@
+{
+    "stage_bucket":"stage-datalake-iceberg-2f88fdbce7c85",
+    "event_bridge_data":{
+        "version":"0",
+        "bucket":{
+            "name":"raw-datalake-iceberg-2f88fdbce7c85"
+        },
+        "object":{
+            "key":"test/test_table/files/filetest001.parquet",
+            "size":9251,
+            "etag":"1bbebf3d8830aebb7e23df098cdfaa30",
+            "sequencer":"0066DA1892240E109C"
+        },
+        "request-id":"NB2SZ8NA4AMQPP46",
+        "requester":"010928219150",
+        "source-ip-address":"167.60.154.252",
+        "reason":"PutObject"
+    }
+}

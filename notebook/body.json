@@ -1,0 +1,29 @@
+
+{
+    "version":"0",
+    "id":"48b21f9e-27fc-f7e4-f24b-20f4bd8ef0ac",
+    "detail-type":"Object Created",
+    "source":"aws.s3",
+    "account":"010928219150",
+    "time":"2024-09-05T20:46:10Z",
+    "region":"us-east-1",
+    "resources":[
+        "arn:aws:s3:::raw-datalake-iceberg-2f88fdbce7e3"
+    ],
+    "detail":{
+        "version":"0",
+        "bucket":{
+            "name":"raw-datalake-iceberg-2f88fdbce7e3"
+        },
+        "object":{
+            "key":"icebergdatalake/sales/shop/files/House price.parquet",
+            "size":9251,
+            "etag":"1bbebf3d8830aebb7e23df098cdfaa30",
+            "sequencer":"0066DA1892240E109C"
+        },
+        "request-id":"NB2SZ8NA4AMQPP46",
+        "requester":"010928219150",
+        "source-ip-address":"167.60.154.252",
+        "reason":"PutObject"
+    }
+}

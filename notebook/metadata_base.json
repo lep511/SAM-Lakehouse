@@ -1,0 +1,124 @@
+{
+   "tableName":"taxi.yellow_tripdata",
+   "database": "taxi",
+   "properties":{
+       "Description":"Yellow taxi trip records include fields capturing pick-up and drop-off dates/times, pick-up and drop-off locations, trip distances, itemized fares, rate types, payment types, and driver-reported passenger counts."
+   },
+   "schemas":[
+       {
+           "type":"struct",
+           "fields":[
+               {
+                   "id":1,
+                   "name":"vendorid",
+                   "type":"string",
+                   "required":false,
+                   "doc":"Identifier for the vendor."
+               },
+               {
+                   "id":2,
+                   "name":"pickup_datetime",
+                   "type":"timestamp",
+                   "required":false,
+                   "doc":"Date and time when the trip started."
+               },
+               {
+                   "id":3,
+                   "name":"dropoff_datetime",
+                   "type":"timestamp",
+                   "required":false,
+                   "doc":"Date and time when the trip ended."
+               },
+               {
+                   "id":4,
+                   "name":"ratecode",
+                   "type":"int",
+                   "required":false,
+                   "doc":"Code indicating the rate type."
+               },
+               {
+                   "id":5,
+                   "name":"passenger_count",
+                   "type":"int",
+                   "required":false,
+                   "doc":"Number of passengers in the trip."
+               },
+               {
+                   "id":6,
+                   "name":"trip_distance",
+                   "type":"double",
+                   "required":false,
+                   "doc":"Distance of the trip in miles."
+               },
+               {
+                   "id":7,
+                   "name":"fare_amount",
+                   "type":"double",
+                   "required":false,
+                   "doc":"Fare amount charged for the trip."
+               },
+               {
+                   "id":8,
+                   "name":"total_amount",
+                   "type":"double",
+                   "required":false,
+                   "doc":"Total amount charged including extras."
+               },
+               {
+                   "id":9,
+                   "name":"payment_type",
+                   "type":"int",
+                   "required":false,
+                   "doc":"Code indicating the payment method."
+               },
+               {
+                   "id":10,
+                   "name":"year",
+                   "type":"int",
+                   "required":false
+               },
+               {
+                   "id":11,
+                   "name":"month",
+                   "type":"int",
+                   "required":false
+               },
+               {
+                   "id":12,
+                   "name":"type",
+                   "type":"string",
+                   "required":false
+               }
+           ],
+           "schema-id":0,
+           "identifier-field-ids":[
+               
+           ]
+       }
+   ],
+   "partition-specs":[
+       {
+           "spec-id":0,
+           "fields":[
+               {
+                   "source-id":10,
+                   "field-id":1000,
+                   "transform":"identity",
+                   "name":"year"
+               },
+               {
+                   "source-id":11,
+                   "field-id":1001,
+                   "transform":"identity",
+                   "name":"month"
+               },
+               {
+                   "source-id":12,
+                   "field-id":1002,
+                   "transform":"identity",
+                   "name":"type"
+               }
+           ]
+       }
+   ]
+}

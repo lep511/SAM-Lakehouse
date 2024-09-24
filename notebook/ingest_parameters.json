@@ -1,0 +1,29 @@
+{
+    "table_name":"taxi_trips",
+    "database": "taxi",
+    "description": "Yellow taxi trip records include fields capturing pick-up and drop-off dates/times and pick-up and drop-off locations",
+    "partition_cols":[
+        "year",
+        "month",
+        "type"
+    ],
+    "doc_string":{
+        "vendorid":"Identifier for the vendor.",
+        "passenger_count":"Number of passengers in the trip.",
+        "trip_distance":"Distance of the trip in miles.",
+        "tpep_pickup_datetime": "Date and time when the trip started.",
+        "tpep_dropoff_datetime": "Date and time when the trip ended.",
+        "ratecodeid": "Code indicating the rate type.",
+        "fare_amount": "Fare amount charged for the trip.",
+        "total_amount": "Total amount charged including extras.",
+        "payment_type": "Code indicating the payment method."
+    },
+    "required_col":{
+        "year":true,
+        "month":true,
+        "Type":true
+    },
+    "metadata_s3":{
+        "datalake":"iceberg-datalake"
+    }
+}

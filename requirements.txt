@@ -1,0 +1,2 @@
+pyarrow==16.1.0
+pyiceberg[s3fs,hive,pyarrow,glue]==0.7.1
