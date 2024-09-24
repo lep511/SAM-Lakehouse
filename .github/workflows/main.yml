@@ -2,6 +2,12 @@ on:
   push:
     branches:
       - main
+
+env:
+  # Setting an environment variable with the value of a configuration variable
+  bucket_name: ${{ vars.BUCKET_NAME }}
+  region: ${{ vars.REGION }}
+
 jobs:
   build-deploy:
     runs-on: ubuntu-latest
@@ -13,11 +19,11 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
+          aws-region: $region
       # sam build 
       - run: sam build --use-container
 
 # Run Unit tests- Specify unit tests here 
 
 # sam deploy
-      - run: sam deploy --no-confirm-changeset --no-fail-on-empty-changeset --stack-name sam-hello-world --s3-bucket ${{ secrets.BUCKET_NAME }} --capabilities CAPABILITY_IAM --region us-east-1
+      - run: sam deploy --no-confirm-changeset --no-fail-on-empty-changeset --stack-name sam-hello-world --s3-bucket $bucket_name --capabilities CAPABILITY_IAM --region $region
