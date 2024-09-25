@@ -184,7 +184,7 @@ def load_file(file_path, schema, partition):
         else:
             # Save the CSV data to parquet locally
             _id = str(uuid.uuid4())
-            temp_dir = f"tmp/{_id}"
+            temp_dir = f"/tmp/{_id}"
             pq.write_to_dataset(
                 table, 
                 root_path=temp_dir

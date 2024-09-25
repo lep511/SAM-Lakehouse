@@ -27,7 +27,16 @@ def lambda_handler(event, context):
             manage_dynamo_event(event_bridge_data, STATUS)
             
             # Process event in process_files module
-            response = process_event_data(stage_bucket, event_bridge_data_detail)
+            try:
+                response = process_event_data(stage_bucket, event_bridge_data_detail)
+            
+            except Exception as e:
+                print(f"[ERROR] {e}")
+                response = {
+                    'errorCount': 1,
+                    'errorCode': 'PROCESS_EVENT_ERROR',
+                    'success': False
+                }
             
             if response['success']:
                 STATUS = "COMPLETED"
