@@ -9,16 +9,15 @@ Metadata:
     Description: 'Automate replication of relational sources into a transactional data lake with Apache Iceberg and AWS Glue.'
     Author: 'Esteban Perez'
     SpdxLicenseId: MIT-0
-    LicenseUrl: ./LICENSE.txt
     ReadmeUrl: ./README.md
     Labels:
       - iceberg
       - lambda
       - datalake
       - serverless
-    HomePageUrl: 'https://gitlab.com/cleanup-coude/sam-lakehouse'
+    HomePageUrl: 'https://github.com/lep511/SAM-Lakehouse'
     SemanticVersion: 0.1.0
-    SourceCodeUrl: 'https://gitlab.com/cleanup-coude/sam-lakehouse'
+    SourceCodeUrl: 'https://github.com/lep511/SAM-Lakehouse'
 
 Parameters:
   EnvType:
