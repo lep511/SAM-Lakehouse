@@ -155,14 +155,13 @@ def check_table(stage_bucket, glue_database, table_name, schema_json, partition_
 # 4. Load file data
 #####################################################################
 
-def load_file(file_path, schema, partition):
+def load_file(file_path, schema):
     """
     Load a Parquet or CSV file from an S3 bucket using a specified schema and partitioning.
 
     Parameters:
     file_path (str): The S3 path to the Parquet or CSV file.
     schema (pyiceberg.Schema): The schema to apply to the data file.
-    partition (str): The partitioning scheme to use.
 
     Returns:
     pyarrow.Table or None: The loaded Parquet file as a PyArrow Table if successful, 
@@ -197,7 +196,6 @@ def load_file(file_path, schema, partition):
             source=file_path,
             coerce_int96_timestamp_unit="us",
             schema=schema.as_arrow(),
-            partitioning=partition,
             filesystem=file_system
         )
     

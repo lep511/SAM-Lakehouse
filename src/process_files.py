@@ -87,7 +87,7 @@ def process_event_data(stage_bucket, event_bridge_data):
     
     
     # 4. Load file data
-    file_data = load_file(file_path, schema, partition_data)
+    file_data = load_file(file_path, schema)
     
     if not file_data:
         return {
