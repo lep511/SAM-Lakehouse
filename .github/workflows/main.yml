@@ -49,6 +49,8 @@ jobs:
       
       # create buckets
       - name: Create buckets
+        env:
+          FOLDER_RAW_BUCKET: icebergdatalake/
         run: |
           echo "Creating sam-bucket..."
           if aws s3api head-bucket --bucket $AWS_BUCKET 2>/dev/null; then echo "Bucket $AWS_BUCKET exist."; else aws s3 mb s3://${{ vars.SAM_BUCKET }} --region ${{ vars.AWS_REGION }} ; fi
@@ -71,10 +73,12 @@ jobs:
 
       # sam deploy
       - name: Deploy
+        env:
+          STACK_NAME: datalake-iceberg
         run: sam deploy --no-confirm-changeset 
                         --no-fail-on-empty-changeset 
-                        --stack-name ${{ vars.STACK_NAME }} 
-                        --s3-bucket ${{ vars.BUCKET_NAME }}
+                        --stack-name $STACK_NAME
+                        --s3-bucket ${{ vars.SAM_BUCKET }}
                         --parameter-overrides S3BucketRaw=${{ vars.RAW_BUCKET }} S3BucketStage=${{ vars.STAGE_BUCKET }}
                         --resolve-image-repos
                         --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM 
