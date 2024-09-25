@@ -9,7 +9,6 @@ Metadata:
     Description: 'Automate replication of relational sources into a transactional data lake with Apache Iceberg and AWS Glue.'
     Author: 'Esteban Perez'
     SpdxLicenseId: MIT-0
-    ReadmeUrl: ./README.md
     Labels:
       - iceberg
       - lambda

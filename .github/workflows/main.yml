@@ -3,6 +3,9 @@ on:
     branches:
       - main
 
+permissions:
+  contents: read
+
 jobs:
   build-deploy:
     name: Build
@@ -26,13 +29,39 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ vars.AWS_REGION }}
       
+      # create repo in ECR
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Build, tag, and push image to Amazon ECR
+        id: build-image
+        env:
+          ECR_REPOSITORY: datalake-iceberg
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          echo "Build a docker container and push it to ECR."
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+      
       # create buckets
       - name: Create buckets
         run: |
-          aws s3 mb s3://${{ vars.SAM_BUCKET }} --region ${{ vars.AWS_REGION }}
-          aws s3 mb s3://${{ vars.RAW_BUCKET }} --region ${{ vars.AWS_REGION }}
-          aws s3 mb s3://${{ vars.STAGE_BUCKET }} --region ${{ vars.AWS_REGION }}
-            
+          echo "Creating sam-bucket..."
+          if aws s3api head-bucket --bucket $AWS_BUCKET 2>/dev/null; then echo "Bucket $AWS_BUCKET exist."; else aws s3 mb s3://${{ vars.SAM_BUCKET }} --region ${{ vars.AWS_REGION }} ; fi
+          echo "Creating raw bucket if not exist..."
+          if aws s3api head-bucket --bucket ${{ vars.RAW_BUCKET }} 2>/dev/null; then echo "Bucket ${{ vars.RAW_BUCKET }} exist."; else aws s3 mb s3://${{ vars.RAW_BUCKET }} --region ${{ vars.AWS_REGION }} ; fi
+          echo "Creating stage bucket if not exist..."
+          if aws s3api head-bucket --bucket ${{ vars.STAGE_BUCKET }} 2>/dev/null; then echo "Bucket ${{ vars.STAGE_BUCKET }} exist."; else aws s3 mb s3://${{ vars.STAGE_BUCKET }} --region ${{ vars.AWS_REGION }} ; fi
+          echo "Enable EventBridge notification..."
+          aws s3api put-bucket-notification-configuration --bucket ${{ vars.RAW_BUCKET }} --notification-configuration '{"EventBridgeConfiguration": {}}'
+          echo "Enabling versioning on buckets..."
+          aws s3api put-bucket-versioning --bucket ${{ vars.RAW_BUCKET }} --versioning-configuration Status=Enabled
+          aws s3api put-bucket-versioning --bucket ${{ vars.STAGE_BUCKET }} --versioning-configuration Status=Enabled
+          aws s3api put-object --bucket ${{ vars.RAW_BUCKET }} --key $FOLDER_RAW_BUCKET --content-length 0
+                
       # sam build
       - name: Build
         run: sam build --beta-features #--use-container
