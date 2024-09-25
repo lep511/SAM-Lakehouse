@@ -5,37 +5,47 @@ on:
 
 jobs:
   build-deploy:
+    name: Build
     runs-on: ubuntu-latest
+    environment: production
+
     steps:
-    - name: Set up SAM Environment
-      uses: |
-        actions/checkout@v2
-        actions/setup-python@v2
-        aws-actions/setup-sam@v1
-        aws-actions/configure-aws-credentials@v1
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: ${{ vars.AWS_REGION }}
-    - name: Create buckets
-      run: |
-        aws s3 mb s3://${{ vars.SAM_BUCKET }} --region ${{ vars.AWS_REGION }}
-        aws s3 mb s3://${{ vars.RAW_BUCKET }} --region ${{ vars.AWS_REGION }}
-        aws s3 mb s3://${{ vars.STAGE_BUCKET }} --region ${{ vars.AWS_REGION }}
+      - name: Checkout
+        uses: actions/checkout@v2
+      
+      - name: Actions Setup
+        uses: actions/setup-python@v2
+      
+      - name: AWS Actions Setup
+        uses: aws-actions/setup-sam@v1
 
-    # sam build 
-    - name: Build
-      run: sam build --beta-features #--use-container
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ vars.AWS_REGION }}
+      
+      # create buckets
+      - name: Create buckets
+        run: |
+          aws s3 mb s3://${{ vars.SAM_BUCKET }} --region ${{ vars.AWS_REGION }}
+          aws s3 mb s3://${{ vars.RAW_BUCKET }} --region ${{ vars.AWS_REGION }}
+          aws s3 mb s3://${{ vars.STAGE_BUCKET }} --region ${{ vars.AWS_REGION }}
+            
+      # sam build
+      - name: Build
+        run: sam build --beta-features #--use-container
 
-# Run Unit tests- Specify unit tests here 
+      # Run Unit tests- Specify unit tests here 
 
-# sam deploy
-    - name: Deploy
-      run: sam deploy --no-confirm-changeset 
-                      --no-fail-on-empty-changeset 
-                      --stack-name ${{ vars.STACK_NAME }} 
-                      --s3-bucket ${{ vars.SAM_BUCKET }}
-                      --parameter-overrides S3BucketRaw=${{ vars.RAW_BUCKET }} S3BucketStage=${{ vars.STAGE_BUCKET }}
-                      --resolve-image-repos
-                      --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM 
-                      --region ${{ vars.AWS_REGION }}
+      # sam deploy
+      - name: Deploy
+        run: sam deploy --no-confirm-changeset 
+                        --no-fail-on-empty-changeset 
+                        --stack-name ${{ vars.STACK_NAME }} 
+                        --s3-bucket ${{ vars.BUCKET_NAME }}
+                        --parameter-overrides S3BucketRaw=${{ vars.RAW_BUCKET }} S3BucketStage=${{ vars.STAGE_BUCKET }}
+                        --resolve-image-repos
+                        --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM 
+                        --region ${{ vars.AWS_REGION }}
