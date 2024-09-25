@@ -1,8 +1,8 @@
 {
-    "tableName": "melbourne.houses_data",
-    "database": "melbourne",
+    "tableName": "taxi.taxi_trips",
+    "database": "taxi",
     "properties": {
-        "Description": "Melbourne house data prices."
+        "Description": "Yellow taxi trip records include fields capturing pick-up and drop-off dates/times and pick-up and drop-off locations"
     },
     "schemas": [
         {
@@ -10,94 +10,126 @@
             "fields": [
                 {
                     "id": 1,
-                    "name": "suburb",
-                    "type": "string",
+                    "name": "vendorid",
+                    "type": "double",
                     "required": false,
-                    "doc": "The suburb where the property is located."
+                    "doc": "Identifier for the vendor."
                 },
                 {
                     "id": 2,
-                    "name": "address",
-                    "type": "string",
+                    "name": "tpep_pickup_datetime",
+                    "type": "timestamp",
                     "required": false,
-                    "doc": "The specific address of the property."
+                    "doc": "Date and time when the trip started."
                 },
                 {
                     "id": 3,
-                    "name": "rooms",
-                    "type": "long",
+                    "name": "tpep_dropoff_datetime",
+                    "type": "timestamp",
                     "required": false,
-                    "doc": "The number of rooms in the property."
+                    "doc": "Date and time when the trip ended."
                 },
                 {
                     "id": 4,
-                    "name": "type",
-                    "type": "string",
+                    "name": "passenger_count",
+                    "type": "double",
                     "required": false,
-                    "doc": "The type of property (e.g., house, unit)."
+                    "doc": "Number of passengers in the trip."
                 },
                 {
                     "id": 5,
-                    "name": "price",
+                    "name": "trip_distance",
                     "type": "double",
                     "required": false,
-                    "doc": "The selling price of the property."
+                    "doc": "Distance of the trip in miles."
                 },
                 {
                     "id": 6,
-                    "name": "method",
-                    "type": "string",
+                    "name": "ratecodeid",
+                    "type": "double",
                     "required": false,
-                    "doc": "The method of sale (e.g., auction, private sale)."
+                    "doc": "Code indicating the rate type."
                 },
                 {
                     "id": 7,
-                    "name": "sellerg",
+                    "name": "store_and_fwd_flag",
                     "type": "string",
                     "required": false,
-                    "doc": "The name of the seller\u2019s agent or agency."
+                    "doc": ""
                 },
                 {
                     "id": 8,
-                    "name": "date",
-                    "type": "string",
+                    "name": "pulocationid",
+                    "type": "long",
                     "required": false,
-                    "doc": "The date the property was sold."
+                    "doc": ""
                 },
                 {
                     "id": 9,
-                    "name": "postcode",
+                    "name": "dolocationid",
                     "type": "long",
                     "required": false,
-                    "doc": "The postal code of the property\u2019s location."
+                    "doc": ""
                 },
                 {
                     "id": 10,
-                    "name": "regionname",
-                    "type": "string",
+                    "name": "payment_type",
+                    "type": "double",
                     "required": false,
-                    "doc": "The broader region where the property is situated."
+                    "doc": "Code indicating the payment method."
                 },
                 {
                     "id": 11,
-                    "name": "propertycount",
-                    "type": "long",
+                    "name": "fare_amount",
+                    "type": "double",
                     "required": false,
-                    "doc": "The number of properties in the suburb."
+                    "doc": "Fare amount charged for the trip."
                 },
                 {
                     "id": 12,
-                    "name": "distance",
+                    "name": "extra",
                     "type": "double",
                     "required": false,
-                    "doc": "The distance from the property to the central business district (CBD)."
+                    "doc": ""
                 },
                 {
                     "id": 13,
-                    "name": "councilarea",
-                    "type": "string",
+                    "name": "mta_tax",
+                    "type": "double",
                     "required": false,
-                    "doc": "The local government area responsible for the property."
+                    "doc": ""
+                },
+                {
+                    "id": 14,
+                    "name": "tip_amount",
+                    "type": "double",
+                    "required": false,
+                    "doc": ""
+                },
+                {
+                    "id": 15,
+                    "name": "tolls_amount",
+                    "type": "double",
+                    "required": false,
+                    "doc": ""
+                },
+                {
+                    "id": 16,
+                    "name": "year",
+                    "type": "int",
+                    "required": true
+                },
+                {
+                    "id": 17,
+                    "name": "month",
+                    "type": "int",
+                    "required": true
+                },
+                {
+                    "id": 18,
+                    "name": "type",
+                    "type": "string",
+                    "required": false
                 }
             ],
             "schema-id": 0,
@@ -107,7 +139,26 @@
     "partition-specs": [
         {
             "spec-id": 0,
-            "fields": []
+            "fields": [
+                {
+                    "source-id": 16,
+                    "field-id": 1000,
+                    "transform": "identity",
+                    "name": "year"
+                },
+                {
+                    "source-id": 17,
+                    "field-id": 1001,
+                    "transform": "identity",
+                    "name": "month"
+                },
+                {
+                    "source-id": 18,
+                    "field-id": 1002,
+                    "transform": "identity",
+                    "name": "type"
+                }
+            ]
         }
     ]
 }
